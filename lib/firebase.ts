@@ -1,4 +1,5 @@
-import { initializeApp, FirebaseApp } from "firebase/app";
+// lib/firebase.ts
+import { initializeApp, FirebaseApp, getApps, getApp } from "firebase/app";
 import { getAuth, Auth, connectAuthEmulator } from "firebase/auth";
 import { getFirestore, Firestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, FirebaseStorage, connectStorageEmulator } from "firebase/storage";
@@ -25,12 +26,17 @@ const checkConfiguration = (): boolean => {
 
   return requiredKeys.every(key => {
     const value = process.env[key];
+    console.log(`${key}:`, value);  // Para depuración, puedes quitar después
     if (!value || value.includes('demo-') || value === 'your-key-here') {
-      console.warn(`Invalid or missing value for: ${key}`);
+      console.warn(`[Firebase Config Error]: Missing or invalid value for environment variable: ${key}`);
       return false;
     }
     return true;
   });
+};
+
+export const isFirebaseConfigured = (): boolean => {
+  return checkConfiguration();
 };
 
 const initializeFirebase = (): FirebaseServices => {
@@ -44,22 +50,20 @@ const initializeFirebase = (): FirebaseServices => {
   };
 
   try {
-    if (typeof window === 'undefined') return services;
-    
-    if (!checkConfiguration()) {
-      throw new Error('Invalid Firebase configuration');
+    if (!isFirebaseConfigured()) {
+      throw new Error('Invalid Firebase configuration: One or more environment variables are missing or invalid.');
     }
 
     const config = {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!
     };
 
-    services.app = initializeApp(config);
+    services.app = !getApps().length ? initializeApp(config) : getApp();
     services.auth = getAuth(services.app);
     services.db = getFirestore(services.app);
     services.storage = getStorage(services.app);
@@ -67,6 +71,7 @@ const initializeFirebase = (): FirebaseServices => {
     services.isConfigured = true;
 
     if (process.env.NODE_ENV === 'development') {
+      console.log('Firebase emulators connected (development mode)');
       connectAuthEmulator(services.auth, 'http://localhost:9099');
       connectFirestoreEmulator(services.db, 'localhost', 8080);
       connectStorageEmulator(services.storage, 'localhost', 9199);
@@ -74,6 +79,7 @@ const initializeFirebase = (): FirebaseServices => {
 
   } catch (error) {
     console.error('Firebase initialization failed:', error);
+    services.isConfigured = false;
   }
 
   return services;
@@ -83,18 +89,23 @@ const { app, auth, db, storage, perf, isConfigured } = initializeFirebase();
 
 export { app, auth, db, storage, perf, isConfigured };
 
-// Helpers mejorados
 export const getFirebaseAuth = (): Auth => {
-  if (!auth || !isConfigured) throw new Error('Firebase Auth not properly initialized');
+  if (!auth || !isConfigured) {
+    throw new Error('Firebase Auth not properly initialized. Check your .env.local variables.');
+  }
   return auth;
 };
 
 export const getFirestoreDB = (): Firestore => {
-  if (!db || !isConfigured) throw new Error('Firestore not properly initialized');
+  if (!db || !isConfigured) {
+    throw new Error('Firestore not properly initialized. Check your .env.local variables.');
+  }
   return db;
 };
 
 export const getFirebaseStorage = (): FirebaseStorage => {
-  if (!storage || !isConfigured) throw new Error('Firebase Storage not properly initialized');
+  if (!storage || !isConfigured) {
+    throw new Error('Firebase Storage not properly initialized. Check your .env.local variables.');
+  }
   return storage;
 };
