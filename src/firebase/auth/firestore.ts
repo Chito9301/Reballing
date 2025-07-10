@@ -20,4 +20,3 @@ export async function getData(collectionName: string) {
     return { docs: [], error: error.message };
   }
 }
-
