@@ -1,25 +1,23 @@
-import { useState } from "react";
-import { signUp } from "../src/firebase/auth/signup";
+import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
-export default function SignUp() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+export async function addData(collectionName: string, data: any) {
+  try {
+    const docRef = await addDoc(collection(db, collectionName), data);
+    return { id: docRef.id, error: null };
+  } catch (error: any) {
+    return { id: null, error: error.message };
+  }
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { user, error } = await signUp(email, password);
-    if (error) setError(error);
-    else alert("Usuario registrado!");
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input type="email" placeholder="Email" onChange={e => setEmail(e.target.value)} required />
-      <input type="password" placeholder="Contraseña" onChange={e => setPassword(e.target.value)} required />
-      <button type="submit">Registrarse</button>
-      {error && <p>{error}</p>}
-    </form>
-  );
+export async function getData(collectionName: string) {
+  try {
+    const q = query(collection(db, collectionName));
+    const querySnapshot = await getDocs(q);
+    const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return { docs, error: null };
+  } catch (error: any) {
+    return { docs: [], error: error.message };
+  }
 }
 
