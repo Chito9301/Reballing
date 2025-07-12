@@ -26,9 +26,7 @@ const checkConfiguration = (): boolean => {
 
   return requiredKeys.every(key => {
     const value = process.env[key];
-    console.log(`${key}:`, value);  // Para depuración, puedes quitar después
     if (!value || value.includes('demo-') || value === 'your-key-here') {
-      console.warn(`[Firebase Config Error]: Missing or invalid value for environment variable: ${key}`);
       return false;
     }
     return true;
@@ -67,11 +65,17 @@ const initializeFirebase = (): FirebaseServices => {
     services.auth = getAuth(services.app);
     services.db = getFirestore(services.app);
     services.storage = getStorage(services.app);
-    services.perf = getPerformance(services.app);
+
+    // SOLO inicializar Performance en el cliente (navegador)
+    if (typeof window !== 'undefined') {
+      services.perf = getPerformance(services.app);
+    } else {
+      services.perf = null;
+    }
+
     services.isConfigured = true;
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('Firebase emulators connected (development mode)');
       connectAuthEmulator(services.auth, 'http://localhost:9099');
       connectFirestoreEmulator(services.db, 'localhost', 8080);
       connectStorageEmulator(services.storage, 'localhost', 9199);
