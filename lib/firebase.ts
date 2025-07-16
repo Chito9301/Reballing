@@ -1,4 +1,5 @@
 // lib/firebase.ts
+
 import { initializeApp, FirebaseApp, getApps, getApp } from "firebase/app";
 import { getAuth, Auth, connectAuthEmulator } from "firebase/auth";
 import { getFirestore, Firestore, connectFirestoreEmulator } from "firebase/firestore";
@@ -14,6 +15,10 @@ type FirebaseServices = {
   isConfigured: boolean;
 };
 
+/**
+ * Verifica que todas las variables de entorno estén presentes y tengan valores válidos.
+ * Imprime el valor de cada variable para depuración (puedes quitar los console.log después).
+ */
 const checkConfiguration = (): boolean => {
   const requiredKeys = [
     'NEXT_PUBLIC_FIREBASE_API_KEY',
@@ -23,23 +28,20 @@ const checkConfiguration = (): boolean => {
     'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
     'NEXT_PUBLIC_FIREBASE_APP_ID'
   ];
-  // Esto es temporalmente luego borrar 
-console.log("PRODUCTION Firebase ENV:", {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-});
 
-  return requiredKeys.every(key => {
+  let allOk = true;
+
+  requiredKeys.forEach(key => {
     const value = process.env[key];
+    // Mostrar valor en logs de build/producción
+    console.log(`${key}:`, value);
     if (!value || value.includes('demo-') || value === 'your-key-here') {
-      return false;
+      console.warn(`[Firebase Config Error]: Missing or invalid value for environment variable: ${key}`);
+      allOk = false;
     }
-    return true;
   });
+
+  return allOk;
 };
 
 export const isFirebaseConfigured = (): boolean => {
@@ -67,7 +69,7 @@ const initializeFirebase = (): FirebaseServices => {
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
       messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!
     };
 
     services.app = !getApps().length ? initializeApp(config) : getApp();
@@ -85,11 +87,11 @@ const initializeFirebase = (): FirebaseServices => {
     services.isConfigured = true;
 
     if (process.env.NODE_ENV === 'development') {
+      console.log('Firebase emulators connected (development mode)');
       connectAuthEmulator(services.auth, 'http://localhost:9099');
       connectFirestoreEmulator(services.db, 'localhost', 8080);
       connectStorageEmulator(services.storage, 'localhost', 9199);
     }
-
   } catch (error) {
     console.error('Firebase initialization failed:', error);
     services.isConfigured = false;
