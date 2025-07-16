@@ -23,6 +23,7 @@ const checkConfiguration = (): boolean => {
     'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
     'NEXT_PUBLIC_FIREBASE_APP_ID'
   ];
+  // Esto es temporalmente luego borrar 
 console.log("PRODUCTION Firebase ENV:", {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
