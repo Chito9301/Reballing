@@ -21,7 +21,7 @@ const firebaseConfig = {
 /**
  * Verifica si todas las variables necesarias están presentes y son válidas.
  */
-const isFirebaseConfigured = (): boolean => {
+export const isFirebaseConfigured = (): boolean => {
   return Object.values(firebaseConfig).every(
     (v) => !!v && v !== "" && !String(v).includes("demo-") && v !== "your-key-here"
   );
@@ -87,9 +87,12 @@ const initializeFirebase = (): FirebaseServices => {
 
 const { app, auth, db, storage, perf, isConfigured } = initializeFirebase();
 
+// Exporta todos los servicios y utilidades necesarias
 export { app, auth, db, storage, perf, isConfigured };
 
-/** Helpers seguros para obtener servicios */
+/**
+ * Helpers seguros para obtener servicios
+ */
 export const getFirebaseAuth = (): Auth => {
   if (!auth || !isConfigured) {
     throw new Error("Firebase Auth not properly initialized. Check your .env.local variables.");
@@ -110,3 +113,4 @@ export const getFirebaseStorage = (): FirebaseStorage => {
   }
   return storage;
 };
+
