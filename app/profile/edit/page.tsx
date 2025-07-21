@@ -288,15 +288,19 @@ export default function EditProfilePage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Perfil público</span>
-                    <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-300 bg-transparent">
-                      Configurar
-                    </Button>
+                    <Link href="/settings/profile-visibility">
+                      <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-300 bg-transparent">
+                        Configurar
+                      </Button>
+                    </Link>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Permitir mensajes directos</span>
-                    <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-300 bg-transparent">
-                      Configurar
-                    </Button>
+                    <Link href="/settings/messages">
+                      <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-300 bg-transparent">
+                        Configurar
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </div>

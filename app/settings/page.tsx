@@ -41,22 +41,22 @@ export default function SettingsPage() {
   }
 
   const getThemeIcon = () => {
-    if (theme === "system") return <Monitor className="h-5 w-5 text-muted-foreground" />
+    if (theme === "system") return <Monitor className="h-5 w-5 text-zinc-400" />
     return actualTheme === "dark" ? (
-      <Moon className="h-5 w-5 text-muted-foreground" />
+      <Moon className="h-5 w-5 text-zinc-400" />
     ) : (
-      <Sun className="h-5 w-5 text-muted-foreground" />
+      <Sun className="h-5 w-5 text-zinc-400" />
     )
   }
 
   return (
     <ProtectedRoute>
-      <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <div className="flex flex-col min-h-screen bg-black text-white">
         {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 bg-background/80 backdrop-blur-md border-b border-border">
+        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 bg-black/80 backdrop-blur-md border-b border-zinc-800">
           <div className="flex items-center gap-2">
             <Link href="/profile">
-              <Button variant="ghost" size="icon" className="text-muted-foreground">
+              <Button variant="ghost" size="icon" className="text-zinc-400">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
@@ -68,7 +68,7 @@ export default function SettingsPage() {
         <main className="flex-1 pt-16 pb-4">
           <div className="p-4 max-w-md mx-auto">
             {error && (
-              <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive mb-4">
+              <Alert variant="destructive" className="bg-red-900/20 border-red-900 text-red-300 mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -79,24 +79,24 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold mb-4 text-purple-400">Cuenta</h2>
               <div className="space-y-2">
                 <Link href="/profile/edit">
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+                  <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors">
                     <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-muted-foreground" />
+                      <User className="h-5 w-5 text-zinc-400" />
                       <span>Editar perfil</span>
                     </div>
-                    <span className="text-muted-foreground">›</span>
+                    <span className="text-zinc-400">›</span>
                   </div>
                 </Link>
 
                 <div
-                  className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
                   onClick={handleSwitchAccount}
                 >
                   <div className="flex items-center gap-3">
-                    <Smartphone className="h-5 w-5 text-muted-foreground" />
+                    <Smartphone className="h-5 w-5 text-zinc-400" />
                     <span>Cambiar de cuenta</span>
                   </div>
-                  <span className="text-muted-foreground">›</span>
+                  <span className="text-zinc-400">›</span>
                 </div>
               </div>
             </div>
@@ -105,21 +105,21 @@ export default function SettingsPage() {
             <div className="mb-8">
               <h2 className="text-lg font-semibold mb-4 text-purple-400">Preferencias</h2>
               <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <Bell className="h-5 w-5 text-muted-foreground" />
+                    <Bell className="h-5 w-5 text-zinc-400" />
                     <span>Notificaciones</span>
                   </div>
                   <Switch checked={notifications} onCheckedChange={setNotifications} />
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg">
                   <div className="flex items-center gap-3">
                     {getThemeIcon()}
                     <span>Tema</span>
                   </div>
                   <Select value={theme} onValueChange={(value: "light" | "dark" | "system") => setTheme(value)}>
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-32 bg-zinc-800 border-zinc-700">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -130,7 +130,7 @@ export default function SettingsPage() {
                   </Select>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg">
                   <div className="flex items-center gap-3">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -142,7 +142,7 @@ export default function SettingsPage() {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="text-muted-foreground"
+                      className="text-zinc-400"
                     >
                       <polygon points="5,3 19,12 5,21" />
                     </svg>
@@ -158,17 +158,17 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold mb-4 text-purple-400">Privacidad y Seguridad</h2>
               <div className="space-y-2">
                 <Link href="/settings/privacy">
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+                  <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors">
                     <div className="flex items-center gap-3">
-                      <Shield className="h-5 w-5 text-muted-foreground" />
+                      <Shield className="h-5 w-5 text-zinc-400" />
                       <span>Privacidad</span>
                     </div>
-                    <span className="text-muted-foreground">›</span>
+                    <span className="text-zinc-400">›</span>
                   </div>
                 </Link>
 
                 <Link href="/settings/blocked">
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+                  <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors">
                     <div className="flex items-center gap-3">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -180,14 +180,14 @@ export default function SettingsPage() {
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="text-muted-foreground"
+                        className="text-zinc-400"
                       >
                         <circle cx="12" cy="12" r="10" />
                         <path d="m4.9 4.9 14.2 14.2" />
                       </svg>
                       <span>Usuarios bloqueados</span>
                     </div>
-                    <span className="text-muted-foreground">›</span>
+                    <span className="text-zinc-400">›</span>
                   </div>
                 </Link>
               </div>
@@ -198,17 +198,17 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold mb-4 text-purple-400">Soporte</h2>
               <div className="space-y-2">
                 <Link href="/help">
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+                  <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors">
                     <div className="flex items-center gap-3">
-                      <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                      <HelpCircle className="h-5 w-5 text-zinc-400" />
                       <span>Centro de ayuda</span>
                     </div>
-                    <span className="text-muted-foreground">›</span>
+                    <span className="text-zinc-400">›</span>
                   </div>
                 </Link>
 
                 <Link href="/about">
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+                  <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors">
                     <div className="flex items-center gap-3">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -220,7 +220,7 @@ export default function SettingsPage() {
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="text-muted-foreground"
+                        className="text-zinc-400"
                       >
                         <circle cx="12" cy="12" r="10" />
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
@@ -228,7 +228,7 @@ export default function SettingsPage() {
                       </svg>
                       <span>Acerca de Challz</span>
                     </div>
-                    <span className="text-muted-foreground">›</span>
+                    <span className="text-zinc-400">›</span>
                   </div>
                 </Link>
               </div>
@@ -245,7 +245,7 @@ export default function SettingsPage() {
                 {isLoggingOut ? "Cerrando sesión..." : "Cerrar sesión"}
               </Button>
 
-              <p className="text-center text-xs text-muted-foreground">Versión 1.0.0 • {user?.email}</p>
+              <p className="text-center text-xs text-zinc-500">Versión 1.0.0 • {user?.email}</p>
             </div>
           </div>
         </main>
