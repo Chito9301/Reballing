@@ -119,7 +119,7 @@ export default function SettingsPage() {
                     <span>Tema</span>
                   </div>
                   <Select value={theme} onValueChange={(value: "light" | "dark" | "system") => setTheme(value)}>
-                    <SelectTrigger className="w-32 bg-zinc-800 border-zinc-700">
+                    <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

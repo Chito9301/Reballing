@@ -19,40 +19,57 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { AppIcon } from "@/components/app-icon"
+import { ViralBadge } from "@/components/viral-badge"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { getTrendingMedia, type MediaItem } from "@/lib/media-service"
+import { getTrendingMedia, getViralContent, type MediaItem } from "@/lib/media-service"
 import { useRouter } from "next/navigation"
 
 export default function HomePage() {
   const { user, isConfigured } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"challenge" | "feed">("challenge")
-  const [trendingMedia, setTrendingMedia] = useState<MediaItem[]>([])
+  const [feedMedia, setFeedMedia] = useState<MediaItem[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchTrendingMedia() {
+    async function fetchFeedContent() {
       try {
         setLoading(true)
-        const media = await getTrendingMedia("views", 10)
-        setTrendingMedia(media)
+
+        if (activeTab === "feed") {
+          // Prioritize viral content in feed
+          const viralContent = await getViralContent(6)
+          const trendingContent = await getTrendingMedia("views", 4)
+
+          // Mix viral and trending content
+          const mixedContent = [...viralContent, ...trendingContent]
+          const uniqueContent = mixedContent.filter(
+            (item, index, self) => index === self.findIndex((t) => t.id === item.id),
+          )
+
+          setFeedMedia(uniqueContent.slice(0, 10))
+        } else {
+          // For challenge tab, still show some viral content mixed with trending
+          const media = await getTrendingMedia("views", 10)
+          setFeedMedia(media)
+        }
       } catch (error) {
-        console.error("Error fetching trending media:", error)
+        console.error("Error fetching feed content:", error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchTrendingMedia()
-  }, [])
+    fetchFeedContent()
+  }, [activeTab])
 
-  const currentMedia = trendingMedia[currentIndex]
+  const currentMedia = feedMedia[currentIndex]
 
   const handleSwipeUp = () => {
-    if (trendingMedia.length > 0) {
-      setCurrentIndex((prev) => (prev + 1) % trendingMedia.length)
+    if (feedMedia.length > 0) {
+      setCurrentIndex((prev) => (prev + 1) % feedMedia.length)
     }
   }
 
@@ -154,7 +171,7 @@ export default function HomePage() {
               activeTab === "feed" ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white" : "text-zinc-400"
             }`}
           >
-            Feed Social
+            Feed Viral
           </button>
         </div>
       </div>
@@ -163,14 +180,16 @@ export default function HomePage() {
       <main className="flex-1 relative" onClick={handleSwipeUp}>
         {/* Full Screen Video Background */}
         <div className="absolute inset-0 bg-zinc-900">
-          {loading || trendingMedia.length === 0 ? (
+          {loading || feedMedia.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <div className="animate-spin-slow mb-4">
                   <AppIcon size={64} />
                 </div>
                 <p className="text-zinc-400">
-                  {!isConfigured ? "Modo Demo - Configurar Firebase para contenido real" : "Cargando contenido..."}
+                  {!isConfigured
+                    ? "Modo Demo - Configurar Firebase para contenido real"
+                    : "Cargando contenido viral..."}
                 </p>
               </div>
             </div>
@@ -224,6 +243,18 @@ export default function HomePage() {
             </div>
           )}
         </div>
+
+        {/* Viral Badge - Top Right */}
+        {currentMedia && (currentMedia.isViral || (currentMedia.viralScore && currentMedia.viralScore > 70)) && (
+          <div className="absolute top-4 right-4 z-10">
+            <ViralBadge
+              isViral={currentMedia.isViral}
+              viralScore={currentMedia.viralScore}
+              size="lg"
+              showScore={true}
+            />
+          </div>
+        )}
 
         {/* TikTok-style Right Side Controls */}
         <div className="absolute right-4 bottom-32 z-10 flex flex-col items-center gap-6">
@@ -360,6 +391,23 @@ export default function HomePage() {
                       ))}
                     </div>
                   )}
+                  {/* Viral Stats */}
+                  {currentMedia.isViral && (
+                    <div className="flex items-center gap-4 text-xs text-zinc-400 mt-2">
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        {currentMedia.views.toLocaleString()} vistas
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Heart className="h-3 w-3" />
+                        {currentMedia.likes.toLocaleString()} likes
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MessageCircle className="h-3 w-3" />
+                        {currentMedia.comments} comentarios
+                      </span>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -368,7 +416,9 @@ export default function HomePage() {
 
         {/* Swipe Up Indicator */}
         <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center animate-bounce">
-          <p className="text-xs text-zinc-400 mb-1">Desliza hacia arriba</p>
+          <p className="text-xs text-zinc-400 mb-1">
+            {activeTab === "feed" ? "Siguiente viral" : "Desliza hacia arriba"}
+          </p>
           <ChevronUp className="h-4 w-4 text-zinc-400" />
         </div>
       </main>

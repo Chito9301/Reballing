@@ -1,9 +1,8 @@
 "use client"
 
-import { ArrowLeft, FileText, Shield, Users, AlertTriangle } from "lucide-react"
+import { ArrowLeft, FileText, Shield, AlertTriangle, Scale } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { AppIcon } from "@/components/app-icon"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function TermsPage() {
@@ -23,29 +22,37 @@ export default function TermsPage() {
 
       {/* Main Content */}
       <main className="flex-1 pt-16 pb-4">
-        <div className="p-4 max-w-2xl mx-auto">
+        <div className="p-4 max-w-4xl mx-auto">
           <div className="flex flex-col items-center text-center mb-8">
-            <AppIcon size={64} />
-            <h2 className="mt-4 text-2xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
-              Términos de Servicio
+            <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center mb-4">
+              <FileText className="h-8 w-8 text-purple-400" />
+            </div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+              Términos de Servicio de Challz
             </h2>
-            <p className="mt-2 text-zinc-400">Última actualización: Enero 2024</p>
+            <p className="mt-2 text-zinc-400">Última actualización: 21 de enero de 2025</p>
           </div>
 
           {/* Introduction */}
           <Card className="mb-6 bg-zinc-900 border-zinc-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
-                <FileText className="h-5 w-5 text-purple-500" />
-                Bienvenido a Challz
+                <Scale className="h-5 w-5 text-purple-500" />
+                Introducción
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-zinc-300 leading-relaxed">
-                Al usar Challz, aceptas estos términos de servicio. Por favor, léelos cuidadosamente antes de usar
-                nuestra aplicación. Challz es una plataforma para crear, compartir y participar en desafíos creativos de
-                manera segura y divertida.
-              </p>
+              <div className="space-y-4 text-zinc-300">
+                <p>
+                  Bienvenido a Challz, la plataforma donde puedes desafiar tu rutina y retar tu mundo. Al usar nuestra
+                  aplicación, aceptas estos términos de servicio.
+                </p>
+                <p>
+                  Challz es una plataforma social que permite a los usuarios crear, compartir y participar en retos
+                  creativos y desafiantes. Nos comprometemos a proporcionar un entorno seguro y divertido para todos
+                  nuestros usuarios.
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -53,48 +60,29 @@ export default function TermsPage() {
           <Card className="mb-6 bg-zinc-900 border-zinc-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
-                <Users className="h-5 w-5 text-purple-500" />
+                <Shield className="h-5 w-5 text-purple-500" />
                 Responsabilidades del Usuario
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
-                  <div>
-                    <h4 className="font-medium text-white">Edad Mínima</h4>
-                    <p className="text-sm text-zinc-300">
-                      Debes tener al menos 13 años para usar Challz. Si eres menor de 18, necesitas permiso de tus
-                      padres.
-                    </p>
-                  </div>
+                <div className="space-y-3">
+                  <h4 className="font-medium text-white">Al usar Challz, te comprometes a:</h4>
+                  <ul className="text-sm text-zinc-300 space-y-2 ml-4">
+                    <li>• Proporcionar información veraz y actualizada en tu perfil</li>
+                    <li>• Respetar a otros usuarios y mantener un comportamiento apropiado</li>
+                    <li>• No crear contenido que sea ofensivo, ilegal o dañino</li>
+                    <li>• No usar la plataforma para actividades comerciales no autorizadas</li>
+                    <li>• Proteger tu cuenta y no compartir tus credenciales</li>
+                    <li>• Cumplir con todas las leyes locales aplicables</li>
+                  </ul>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
-                  <div>
-                    <h4 className="font-medium text-white">Contenido Apropiado</h4>
-                    <p className="text-sm text-zinc-300">
-                      Todo el contenido debe ser apropiado, respetuoso y seguir nuestras pautas de comunidad.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
-                  <div>
-                    <h4 className="font-medium text-white">Información Veraz</h4>
-                    <p className="text-sm text-zinc-300">
-                      Debes proporcionar información precisa y mantener tu cuenta segura.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
-                  <div>
-                    <h4 className="font-medium text-white">Respeto a Otros</h4>
-                    <p className="text-sm text-zinc-300">
-                      Trata a todos los usuarios con respeto. No se tolera el acoso, bullying o discriminación.
-                    </p>
-                  </div>
+                <div className="bg-zinc-800 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2 text-white">Edad mínima:</h4>
+                  <p className="text-sm text-zinc-300">
+                    Debes tener al menos 13 años para usar Challz. Los usuarios menores de 18 años deben tener el
+                    consentimiento de sus padres o tutores.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -109,43 +97,35 @@ export default function TermsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <p className="text-zinc-300">No está permitido publicar contenido que incluya:</p>
-                <ul className="text-sm text-zinc-300 space-y-2 ml-4">
-                  <li>• Violencia, amenazas o contenido que promueva daño</li>
-                  <li>• Contenido sexual explícito o inapropiado</li>
-                  <li>• Discurso de odio, discriminación o acoso</li>
-                  <li>• Información falsa o engañosa</li>
-                  <li>• Contenido que viole derechos de autor</li>
-                  <li>• Spam o contenido comercial no autorizado</li>
-                  <li>• Actividades ilegales o peligrosas</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Privacy and Data */}
-          <Card className="mb-6 bg-zinc-900 border-zinc-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Shield className="h-5 w-5 text-purple-500" />
-                Privacidad y Datos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
               <div className="space-y-4">
                 <p className="text-zinc-300">
-                  Tu privacidad es importante para nosotros. Recolectamos solo la información necesaria para
-                  proporcionar nuestros servicios y nunca la compartimos sin tu consentimiento.
+                  Está estrictamente prohibido publicar o compartir contenido que incluya:
                 </p>
-                <div className="bg-zinc-800 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2 text-white">Datos que recolectamos:</h4>
-                  <ul className="text-sm text-zinc-300 space-y-1">
-                    <li>• Información de registro (email, edad, género)</li>
-                    <li>• Contenido que publicas (retos, respuestas, comentarios)</li>
-                    <li>• Interacciones (likes, follows, mensajes)</li>
-                    <li>• Datos de uso para mejorar la experiencia</li>
-                  </ul>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-white">Contenido dañino:</h4>
+                    <ul className="text-sm text-zinc-300 space-y-1">
+                      <li>• Violencia o amenazas</li>
+                      <li>• Acoso o bullying</li>
+                      <li>• Discriminación o odio</li>
+                      <li>• Autolesión o suicidio</li>
+                    </ul>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-white">Contenido ilegal:</h4>
+                    <ul className="text-sm text-zinc-300 space-y-1">
+                      <li>• Material con derechos de autor</li>
+                      <li>• Contenido sexual explícito</li>
+                      <li>• Drogas o sustancias ilegales</li>
+                      <li>• Actividades peligrosas</li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="bg-red-900/20 border border-red-900/30 p-4 rounded-lg">
+                  <p className="text-sm text-red-300">
+                    <strong>Importante:</strong> El incumplimiento de estas reglas puede resultar en la suspensión
+                    temporal o permanente de tu cuenta.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -157,26 +137,93 @@ export default function TermsPage() {
               <CardTitle className="text-white">Propiedad Intelectual</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 text-zinc-300">
-                <p>
-                  • Mantienes los derechos de tu contenido, pero nos otorgas licencia para mostrarlo en la plataforma
-                </p>
-                <p>• Respeta los derechos de autor de otros usuarios y terceros</p>
-                <p>• Challz y su logo son marcas registradas de nuestra empresa</p>
+              <div className="space-y-4 text-zinc-300">
+                <div>
+                  <h4 className="font-medium text-white mb-2">Tu contenido:</h4>
+                  <p className="text-sm">
+                    Mantienes todos los derechos sobre el contenido que publicas en Challz. Sin embargo, nos otorgas una
+                    licencia para usar, mostrar y distribuir tu contenido en nuestra plataforma.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-white mb-2">Nuestro contenido:</h4>
+                  <p className="text-sm">
+                    Challz, su logo, diseño y funcionalidades son propiedad de nuestra empresa. No puedes usar nuestros
+                    elementos de marca sin autorización previa.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Termination */}
+          {/* Privacy and Data */}
           <Card className="mb-6 bg-zinc-900 border-zinc-800">
             <CardHeader>
-              <CardTitle className="text-white">Terminación del Servicio</CardTitle>
+              <CardTitle className="text-white">Privacidad y Datos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 text-zinc-300">
+              <div className="space-y-4 text-zinc-300">
                 <p>
-                  Nos reservamos el derecho de suspender o terminar cuentas que violen estos términos. Puedes eliminar
-                  tu cuenta en cualquier momento desde la configuración.
+                  Tu privacidad es importante para nosotros. Recolectamos y usamos tu información de acuerdo con nuestra
+                  Política de Privacidad.
+                </p>
+                <div className="bg-zinc-800 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2 text-white">Datos que recolectamos:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li>• Información de perfil (nombre, email, edad)</li>
+                    <li>• Contenido que publicas (retos, respuestas, comentarios)</li>
+                    <li>• Datos de uso y interacciones</li>
+                    <li>• Información técnica del dispositivo</li>
+                  </ul>
+                </div>
+                <p className="text-sm">
+                  Para más detalles, consulta nuestra{" "}
+                  <Link href="/privacidad" className="text-purple-400 hover:text-purple-300">
+                    Política de Privacidad
+                  </Link>
+                  .
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Limitation of Liability */}
+          <Card className="mb-6 bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white">Limitación de Responsabilidad</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 text-zinc-300">
+                <p>
+                  Challz se proporciona "tal como está". No garantizamos que el servicio esté libre de errores o
+                  interrupciones.
+                </p>
+                <div className="space-y-2">
+                  <h4 className="font-medium text-white">No somos responsables por:</h4>
+                  <ul className="text-sm space-y-1 ml-4">
+                    <li>• Pérdida de datos o contenido</li>
+                    <li>• Daños resultantes del uso de la plataforma</li>
+                    <li>• Contenido generado por otros usuarios</li>
+                    <li>• Interrupciones del servicio</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Changes to Terms */}
+          <Card className="mb-6 bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white">Modificaciones</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 text-zinc-300">
+                <p>
+                  Nos reservamos el derecho de modificar estos términos en cualquier momento. Te notificaremos sobre
+                  cambios importantes a través de la aplicación o por email.
+                </p>
+                <p className="text-sm">
+                  El uso continuado de Challz después de los cambios constituye tu aceptación de los nuevos términos.
                 </p>
               </div>
             </CardContent>
@@ -191,17 +238,12 @@ export default function TermsPage() {
               <div className="space-y-3">
                 <p className="text-zinc-300">Si tienes preguntas sobre estos términos, contáctanos:</p>
                 <div className="flex items-center gap-3 p-3 bg-zinc-800 rounded-lg">
-                  <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
-                    <span className="text-purple-400 font-bold text-sm">@</span>
-                  </div>
                   <div>
-                    <p className="font-medium text-white">Email Legal</p>
+                    <p className="font-medium text-white">Email de Soporte</p>
                     <p className="text-sm text-zinc-400">challzchito@gmail.com</p>
                   </div>
                 </div>
-                <p className="text-xs text-zinc-500">
-                  Estos términos pueden actualizarse ocasionalmente. Te notificaremos de cambios importantes.
-                </p>
+                <p className="text-xs text-zinc-500">Responderemos a tu consulta en un plazo máximo de 48 horas.</p>
               </div>
             </CardContent>
           </Card>
