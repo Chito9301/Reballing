@@ -1,6 +1,18 @@
 "use client"
 
-import { Heart, MessageCircle, Plus, Search, Share2, ChevronUp, Music, Bookmark, Eye, TrendingUp } from "lucide-react"
+import {
+  Heart,
+  MessageCircle,
+  Plus,
+  Search,
+  Share2,
+  ChevronUp,
+  Music,
+  Bookmark,
+  Eye,
+  TrendingUp,
+  Home,
+} from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -12,7 +24,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { getTrendingMedia, type MediaItem } from "@/lib/media-service"
 import { useRouter } from "next/navigation"
 
-export default function Home() {
+export default function HomePage() {
   const { user, isConfigured } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"challenge" | "feed">("challenge")
@@ -44,12 +56,6 @@ export default function Home() {
     }
   }
 
-  const handleSwipeDown = () => {
-    if (trendingMedia.length > 0) {
-      setCurrentIndex((prev) => (prev - 1 + trendingMedia.length) % trendingMedia.length)
-    }
-  }
-
   const handleCreateClick = () => {
     if (!isConfigured) {
       router.push("/env-setup")
@@ -67,6 +73,25 @@ export default function Home() {
       router.push("/auth/login")
     } else {
       router.push("/profile")
+    }
+  }
+
+  const handleShare = async () => {
+    if (navigator.share && currentMedia) {
+      try {
+        await navigator.share({
+          title: currentMedia.title,
+          text: currentMedia.description,
+          url: window.location.href,
+        })
+      } catch (error) {
+        console.log("Error sharing:", error)
+      }
+    } else {
+      // Fallback: copy to clipboard
+      if (currentMedia) {
+        navigator.clipboard.writeText(`${currentMedia.title} - ${window.location.href}`)
+      }
     }
   }
 
@@ -202,20 +227,18 @@ export default function Home() {
 
         {/* TikTok-style Right Side Controls */}
         <div className="absolute right-4 bottom-32 z-10 flex flex-col items-center gap-6">
-          <button onClick={handleProfileClick}>
-            <div className="flex flex-col items-center">
-              <Avatar className="h-12 w-12 border-2 border-white">
-                <AvatarImage
-                  src={user?.photoURL || "/placeholder.svg?height=48&width=48"}
-                  alt={user?.displayName || "@user"}
-                />
-                <AvatarFallback>{user?.displayName?.charAt(0) || "U"}</AvatarFallback>
-              </Avatar>
-              <div className="mt-1 bg-purple-600 rounded-full h-5 w-5 flex items-center justify-center absolute -bottom-1">
-                <Plus className="h-3 w-3 text-white" />
-              </div>
+          <div className="flex flex-col items-center" onClick={handleProfileClick}>
+            <Avatar className="h-12 w-12 border-2 border-white cursor-pointer">
+              <AvatarImage
+                src={user?.photoURL || "/placeholder.svg?height=48&width=48"}
+                alt={user?.displayName || "@user"}
+              />
+              <AvatarFallback>{user?.displayName?.charAt(0) || "U"}</AvatarFallback>
+            </Avatar>
+            <div className="mt-1 bg-purple-600 rounded-full h-5 w-5 flex items-center justify-center absolute -bottom-1">
+              <Plus className="h-3 w-3 text-white" />
             </div>
-          </button>
+          </div>
 
           <div className="flex flex-col items-center">
             <Button variant="ghost" size="icon" className="rounded-full bg-black/40 backdrop-blur-md h-12 w-12">
@@ -225,9 +248,11 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col items-center">
-            <Button variant="ghost" size="icon" className="rounded-full bg-black/40 backdrop-blur-md h-12 w-12">
-              <MessageCircle className="h-7 w-7" />
-            </Button>
+            <Link href={currentMedia ? `/media/${currentMedia.id}` : "#"}>
+              <Button variant="ghost" size="icon" className="rounded-full bg-black/40 backdrop-blur-md h-12 w-12">
+                <MessageCircle className="h-7 w-7" />
+              </Button>
+            </Link>
             <span className="text-xs mt-1">{currentMedia?.comments || 0}</span>
           </div>
 
@@ -246,7 +271,12 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col items-center">
-            <Button variant="ghost" size="icon" className="rounded-full bg-black/40 backdrop-blur-md h-12 w-12">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full bg-black/40 backdrop-blur-md h-12 w-12"
+              onClick={handleShare}
+            >
               <Share2 className="h-7 w-7" />
             </Button>
             <span className="text-xs mt-1">Compartir</span>
@@ -288,7 +318,7 @@ export default function Home() {
                   {!isConfigured ? "Configurar Firebase" : "Aceptar Reto"}
                 </Button>
                 <Link href="/reto/1">
-                  <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800">
+                  <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 bg-transparent">
                     Ver Respuestas
                   </Button>
                 </Link>
@@ -346,24 +376,16 @@ export default function Home() {
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-t border-zinc-800">
         <div className="flex items-center justify-around p-3">
-          <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span className="text-xs">Inicio</span>
-          </Button>
-          <Link href="/trending">
-            <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2 text-zinc-500">
-              <TrendingUp className="h-5 w-5" />
-              <span className="text-xs">Tendencias</span>
-            </Button>
+          <div className="flex flex-col items-center gap-1 py-2">
+            <Home className="h-6 w-6 text-white" />
+            <span className="text-xs text-white">Inicio</span>
+          </div>
+
+          <Link href="/trending" className="flex flex-col items-center gap-1 py-2">
+            <TrendingUp className="h-5 w-5 text-zinc-500" />
+            <span className="text-xs text-zinc-500">Tendencias</span>
           </Link>
+
           <Button
             variant="ghost"
             size="icon"
@@ -372,47 +394,49 @@ export default function Home() {
           >
             <Plus className="h-7 w-7" />
           </Button>
-          <button onClick={handleProfileClick}>
-            <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2 text-zinc-500">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className="text-xs">Perfil</span>
-            </Button>
-          </button>
-          <Link href="/alertas">
-            <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2 text-zinc-500">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className="text-xs">Alertas</span>
-            </Button>
+
+          <div className="flex flex-col items-center gap-1 py-2 cursor-pointer" onClick={handleProfileClick}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-zinc-500"
+              />
+              <path
+                d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-zinc-500"
+              />
+            </svg>
+            <span className="text-xs text-zinc-500">Perfil</span>
+          </div>
+
+          <Link href="/alertas" className="flex flex-col items-center gap-1 py-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-zinc-500"
+              />
+              <path
+                d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-zinc-500"
+              />
+            </svg>
+            <span className="text-xs text-zinc-500">Alertas</span>
           </Link>
         </div>
       </nav>

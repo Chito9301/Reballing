@@ -13,6 +13,7 @@ import { AppIcon } from "@/components/app-icon"
 import { Separator } from "@/components/ui/separator"
 import { AlertCircle, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { doc, setDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
@@ -21,6 +22,8 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [age, setAge] = useState("")
+  const [gender, setGender] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const { signUp } = useAuth()
@@ -30,6 +33,19 @@ export default function RegisterPage() {
     e.preventDefault()
     setError("")
     setIsLoading(true)
+
+    if (!age || !gender) {
+      setError("Por favor completa todos los campos requeridos.")
+      setIsLoading(false)
+      return
+    }
+
+    const ageNum = Number.parseInt(age)
+    if (ageNum < 13 || ageNum > 120) {
+      setError("La edad debe estar entre 13 y 120 años.")
+      setIsLoading(false)
+      return
+    }
 
     try {
       // Create the user with Firebase Authentication
@@ -41,9 +57,14 @@ export default function RegisterPage() {
         name,
         username,
         email,
+        age: ageNum,
+        gender,
         createdAt: new Date().toISOString(),
         bio: "",
         photoURL: "",
+        followers: 0,
+        following: 0,
+        challengesCompleted: 0,
       })
 
       router.push("/")
@@ -83,21 +104,22 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm text-zinc-400">
-                Nombre
+                Nombre completo *
               </Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Tu nombre"
+                placeholder="Tu nombre completo"
                 className="bg-zinc-900 border-zinc-700"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="username" className="text-sm text-zinc-400">
-                Nombre de usuario
+                Nombre de usuario *
               </Label>
               <Input
                 id="username"
@@ -109,9 +131,10 @@ export default function RegisterPage() {
                 required
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm text-zinc-400">
-                Correo Electrónico
+                Correo Electrónico *
               </Label>
               <Input
                 id="email"
@@ -123,9 +146,46 @@ export default function RegisterPage() {
                 required
               />
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="age" className="text-sm text-zinc-400">
+                  Edad *
+                </Label>
+                <Input
+                  id="age"
+                  type="number"
+                  placeholder="18"
+                  min="13"
+                  max="120"
+                  className="bg-zinc-900 border-zinc-700"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="gender" className="text-sm text-zinc-400">
+                  Sexo *
+                </Label>
+                <Select value={gender} onValueChange={setGender} required>
+                  <SelectTrigger className="bg-zinc-900 border-zinc-700">
+                    <SelectValue placeholder="Seleccionar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="masculino">Masculino</SelectItem>
+                    <SelectItem value="femenino">Femenino</SelectItem>
+                    <SelectItem value="otro">Otro</SelectItem>
+                    <SelectItem value="prefiero-no-decir">Prefiero no decir</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm text-zinc-400">
-                Contraseña
+                Contraseña *
               </Label>
               <Input
                 id="password"
@@ -137,6 +197,7 @@ export default function RegisterPage() {
                 required
                 minLength={6}
               />
+              <p className="text-xs text-zinc-500">Mínimo 6 caracteres</p>
             </div>
 
             <Button
@@ -163,7 +224,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="border-zinc-700 hover:bg-zinc-900">
+            <Button variant="outline" className="border-zinc-700 hover:bg-zinc-900 bg-transparent">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5 mr-2" fill="currentColor">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -173,7 +234,7 @@ export default function RegisterPage() {
               </svg>
               Google
             </Button>
-            <Button variant="outline" className="border-zinc-700 hover:bg-zinc-900">
+            <Button variant="outline" className="border-zinc-700 hover:bg-zinc-900 bg-transparent">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5 mr-2" fill="currentColor">
                 <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45z" />
               </svg>
