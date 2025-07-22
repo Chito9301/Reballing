@@ -10,10 +10,10 @@ import {
   Share2,
   ChevronUp,
   Music,
-  Eye,
   TrendingUp,
   Bookmark,
   AlertTriangle,
+  MessageSquare,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -46,12 +46,12 @@ function InteractiveButton({
       <Button
         variant="ghost"
         size="icon"
-        className={`rounded-full bg-black/40 backdrop-blur-md h-12 w-12 transition-all duration-200 hover:scale-110 ${isActive ? activeColor : "text-white"}`}
+        className={`rounded-full bg-black/40 backdrop-blur-md h-10 w-10 transition-all duration-200 hover:scale-110 ${isActive ? activeColor : "text-white"}`}
         onClick={onClick}
       >
-        <Icon className="h-7 w-7" />
+        <Icon className="h-5 w-5" />
       </Button>
-      <span className="text-xs mt-1">{count}</span>
+      <span className="text-xs mt-1 text-center leading-tight">{count}</span>
     </div>
   )
 }
@@ -244,8 +244,9 @@ export default function Home() {
           )}
         </div>
 
-        {/* TikTok-style Right Side Controls */}
-        <div className="absolute right-4 bottom-32 z-10 flex flex-col items-center gap-6">
+        {/* TikTok-style Right Side Controls - Optimized for Mobile */}
+        <div className="absolute right-3 bottom-32 z-10 flex flex-col items-center gap-4">
+          {/* Profile Avatar */}
           <button onClick={handleProfileClick}>
             <div className="flex flex-col items-center">
               <Avatar className="h-12 w-12 border-2 border-white">
@@ -261,6 +262,7 @@ export default function Home() {
             </div>
           </button>
 
+          {/* Essential Interactive Buttons */}
           <InteractiveButton
             icon={Heart}
             count={currentMedia?.likes || 0}
@@ -277,10 +279,19 @@ export default function Home() {
           />
 
           <InteractiveButton
-            icon={Eye}
-            count={currentMedia?.views || 0}
+            icon={MessageSquare}
+            count="Chat"
             isActive={false}
-            onClick={() => console.log("Views clicked")}
+            onClick={() => {
+              if (!user) {
+                router.push("/auth/login")
+              } else {
+                console.log("Chat clicked - Opening direct message")
+                // Future: Open chat/DM functionality
+                alert("Función de chat - Por implementar")
+              }
+            }}
+            activeColor="text-blue-500"
           />
 
           <InteractiveButton
@@ -309,14 +320,6 @@ export default function Home() {
           />
 
           <InteractiveButton
-            icon={TrendingUp}
-            count="Viral"
-            isActive={false}
-            onClick={() => console.log("Viral clicked")}
-            activeColor="text-orange-500"
-          />
-
-          <InteractiveButton
             icon={AlertTriangle}
             count="Reportar"
             isActive={false}
@@ -330,7 +333,7 @@ export default function Home() {
         </div>
 
         {/* Bottom Content Info */}
-        <div className="absolute bottom-0 left-0 right-16 p-4 z-10">
+        <div className="absolute bottom-0 left-0 right-14 p-4 z-10">
           {activeTab === "challenge" ? (
             <div>
               <Badge className="mb-2 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30">RETO DEL DÍA</Badge>
