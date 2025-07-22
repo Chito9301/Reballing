@@ -10,9 +10,9 @@ import {
   Share2,
   ChevronUp,
   Music,
+  Eye,
   TrendingUp,
   Bookmark,
-  AlertTriangle,
   MessageSquare,
 } from "lucide-react"
 import Image from "next/image"
@@ -46,12 +46,12 @@ function InteractiveButton({
       <Button
         variant="ghost"
         size="icon"
-        className={`rounded-full bg-black/40 backdrop-blur-md h-10 w-10 transition-all duration-200 hover:scale-110 ${isActive ? activeColor : "text-white"}`}
+        className={`rounded-full bg-black/40 backdrop-blur-md h-9 w-9 transition-all duration-200 hover:scale-110 ${isActive ? activeColor : "text-white"}`}
         onClick={onClick}
       >
-        <Icon className="h-5 w-5" />
+        <Icon className="h-4 w-4" />
       </Button>
-      <span className="text-xs mt-1 text-center leading-tight">{count}</span>
+      <span className="text-xs mt-1 text-center leading-tight max-w-[50px] truncate">{count}</span>
     </div>
   )
 }
@@ -111,6 +111,17 @@ export default function Home() {
       router.push("/auth/login")
     } else {
       router.push("/profile")
+    }
+  }
+
+  const handleChatClick = () => {
+    if (!isConfigured) {
+      router.push("/env-setup")
+    } else if (!user) {
+      router.push("/auth/login")
+    } else {
+      console.log("Chat clicked - Opening chat functionality")
+      alert("Función de chat - Por implementar")
     }
   }
 
@@ -244,25 +255,9 @@ export default function Home() {
           )}
         </div>
 
-        {/* TikTok-style Right Side Controls - Optimized for Mobile */}
-        <div className="absolute right-3 bottom-32 z-10 flex flex-col items-center gap-4">
-          {/* Profile Avatar */}
-          <button onClick={handleProfileClick}>
-            <div className="flex flex-col items-center">
-              <Avatar className="h-12 w-12 border-2 border-white">
-                <AvatarImage
-                  src={user?.photoURL || "/placeholder.svg?height=48&width=48"}
-                  alt={user?.displayName || "@user"}
-                />
-                <AvatarFallback>{user?.displayName?.charAt(0) || "U"}</AvatarFallback>
-              </Avatar>
-              <div className="mt-1 bg-purple-600 rounded-full h-5 w-5 flex items-center justify-center absolute -bottom-1">
-                <Plus className="h-3 w-3 text-white" />
-              </div>
-            </div>
-          </button>
-
-          {/* Essential Interactive Buttons */}
+        {/* Right Side Controls - Report Button Removed */}
+        <div className="absolute right-3 bottom-32 z-10 flex flex-col items-center gap-3">
+          {/* Like Button */}
           <InteractiveButton
             icon={Heart}
             count={currentMedia?.likes || 0}
@@ -271,6 +266,7 @@ export default function Home() {
             activeColor="text-red-500"
           />
 
+          {/* Comments Button */}
           <InteractiveButton
             icon={MessageCircle}
             count={currentMedia?.comments || 0}
@@ -278,22 +274,16 @@ export default function Home() {
             onClick={() => console.log("Comments clicked")}
           />
 
+          {/* Views Button */}
           <InteractiveButton
-            icon={MessageSquare}
-            count="Chat"
+            icon={Eye}
+            count={currentMedia?.views || 0}
             isActive={false}
-            onClick={() => {
-              if (!user) {
-                router.push("/auth/login")
-              } else {
-                console.log("Chat clicked - Opening direct message")
-                // Future: Open chat/DM functionality
-                alert("Función de chat - Por implementar")
-              }
-            }}
+            onClick={() => console.log("Views clicked")}
             activeColor="text-blue-500"
           />
 
+          {/* Save Button */}
           <InteractiveButton
             icon={Bookmark}
             count="Guardar"
@@ -302,6 +292,7 @@ export default function Home() {
             activeColor="text-yellow-500"
           />
 
+          {/* Share Button */}
           <InteractiveButton
             icon={Share2}
             count="Compartir"
@@ -319,21 +310,18 @@ export default function Home() {
             }}
           />
 
+          {/* Trending Button */}
           <InteractiveButton
-            icon={AlertTriangle}
-            count="Reportar"
+            icon={TrendingUp}
+            count="Tendencias"
             isActive={false}
-            onClick={() => {
-              if (confirm("¿Quieres reportar este contenido?")) {
-                alert("Reporte enviado. Gracias por ayudarnos a mantener la comunidad segura.")
-              }
-            }}
-            activeColor="text-red-500"
+            onClick={() => router.push("/trending")}
+            activeColor="text-orange-500"
           />
         </div>
 
         {/* Bottom Content Info */}
-        <div className="absolute bottom-0 left-0 right-14 p-4 z-10">
+        <div className="absolute bottom-0 left-0 right-12 p-4 z-10">
           {activeTab === "challenge" ? (
             <div>
               <Badge className="mb-2 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30">RETO DEL DÍA</Badge>
@@ -425,6 +413,7 @@ export default function Home() {
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-t border-zinc-800">
         <div className="flex items-center justify-around p-3">
+          {/* Home Button */}
           <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -437,12 +426,18 @@ export default function Home() {
             </svg>
             <span className="text-xs">Inicio</span>
           </Button>
-          <Link href="/trending">
-            <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2 text-zinc-500">
-              <TrendingUp className="h-5 w-5" />
-              <span className="text-xs">Tendencias</span>
-            </Button>
-          </Link>
+
+          {/* Chat Button */}
+          <Button
+            variant="ghost"
+            className="flex flex-col items-center gap-1 h-auto py-2 text-zinc-500"
+            onClick={handleChatClick}
+          >
+            <MessageSquare className="h-5 w-5" />
+            <span className="text-xs">Chat</span>
+          </Button>
+
+          {/* Create Button */}
           <Button
             variant="ghost"
             size="icon"
@@ -451,6 +446,8 @@ export default function Home() {
           >
             <Plus className="h-7 w-7" />
           </Button>
+
+          {/* Profile Button */}
           <button onClick={handleProfileClick}>
             <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2 text-zinc-500">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -472,6 +469,8 @@ export default function Home() {
               <span className="text-xs">Perfil</span>
             </Button>
           </button>
+
+          {/* Alerts Button */}
           <Link href="/alertas">
             <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-2 text-zinc-500">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
