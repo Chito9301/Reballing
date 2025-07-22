@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
@@ -21,30 +21,58 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const { signUp } = useAuth()
+  const { signUp, isConfigured } = useAuth()
   const router = useRouter()
+
+  useEffect(() => {
+    if (!isConfigured) {
+      router.push("/env-setup")
+    }
+  }, [isConfigured, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
+    if (!isConfigured) {
+      setError("Firebase no está configurado. Por favor configura las variables de entorno.")
+      setIsLoading(false)
+      return
+    }
+
+    // Validaciones
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden.")
+      setIsLoading(false)
+      return
+    }
+
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.")
+      setIsLoading(false)
+      return
+    }
+
     try {
       // Create the user with Firebase Authentication
       await signUp(email, password, username)
 
-      // Create a user document in Firestore
-      const userDoc = doc(db, "users", email)
-      await setDoc(userDoc, {
-        name,
-        username,
-        email,
-        createdAt: new Date().toISOString(),
-        bio: "",
-        photoURL: "",
-      })
+      // Create a user document in Firestore if db is available
+      if (db) {
+        const userDoc = doc(db, "users", email)
+        await setDoc(userDoc, {
+          name,
+          username,
+          email,
+          createdAt: new Date().toISOString(),
+          bio: "",
+          photoURL: "",
+        })
+      }
 
       router.push("/")
     } catch (error: any) {
@@ -53,12 +81,25 @@ export default function RegisterPage() {
         setError("Este correo electrónico ya está en uso. Por favor utiliza otro o inicia sesión.")
       } else if (error.code === "auth/weak-password") {
         setError("La contraseña es demasiado débil. Debe tener al menos 6 caracteres.")
+      } else if (error.code === "auth/invalid-email") {
+        setError("Por favor ingresa un correo electrónico válido.")
       } else {
         setError("Ocurrió un error al registrarte. Por favor intenta de nuevo.")
       }
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (!isConfigured) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 text-purple-500 animate-spin mx-auto mb-4" />
+          <p className="text-white">Redirigiendo a configuración...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -68,9 +109,9 @@ export default function RegisterPage() {
           <div className="flex flex-col items-center text-center">
             <AppIcon size={80} />
             <h1 className="mt-4 text-3xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
-              Challz
+              Regístrate
             </h1>
-            <p className="mt-2 text-zinc-400">Desafía tu rutina. Reta tu mundo.</p>
+            <p className="mt-2 text-zinc-400">Únete a la comunidad de Challz</p>
           </div>
 
           {error && (
@@ -138,6 +179,21 @@ export default function RegisterPage() {
                 minLength={6}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-sm text-zinc-400">
+                Repetir Contraseña
+              </Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="••••••••"
+                className="bg-zinc-900 border-zinc-700"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
 
             <Button
               type="submit"
@@ -150,7 +206,7 @@ export default function RegisterPage() {
                   Creando cuenta...
                 </>
               ) : (
-                "Crear Cuenta"
+                "Crear cuenta"
               )}
             </Button>
           </form>
@@ -163,7 +219,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="border-zinc-700 hover:bg-zinc-900">
+            <Button variant="outline" className="border-zinc-700 hover:bg-zinc-900 bg-transparent">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5 mr-2" fill="currentColor">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -173,7 +229,7 @@ export default function RegisterPage() {
               </svg>
               Google
             </Button>
-            <Button variant="outline" className="border-zinc-700 hover:bg-zinc-900">
+            <Button variant="outline" className="border-zinc-700 hover:bg-zinc-900 bg-transparent">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5 mr-2" fill="currentColor">
                 <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45z" />
               </svg>
