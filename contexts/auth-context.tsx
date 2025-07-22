@@ -10,6 +10,7 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  sendPasswordResetEmail,
 } from "firebase/auth"
 import { auth, isFirebaseConfigured } from "@/lib/firebase"
 
@@ -20,6 +21,7 @@ type AuthContextType = {
   signUp: (email: string, password: string, username: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  resetPassword: (email: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -29,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   signUp: async () => {},
   signIn: async () => {},
   logout: async () => {},
+  resetPassword: async () => {},
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -97,8 +100,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
+  const resetPassword = async (email: string) => {
+    if (!configured || !auth) {
+      throw new Error("Firebase no está configurado")
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email)
+    } catch (error) {
+      console.error("Error sending password reset email:", error)
+      throw error
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, isConfigured: configured, signUp, signIn, logout }}>
+    <AuthContext.Provider value={{ user, loading, isConfigured: configured, signUp, signIn, logout, resetPassword }}>
       {children}
     </AuthContext.Provider>
   )
