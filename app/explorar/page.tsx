@@ -1,288 +1,378 @@
-import { ArrowLeft, Search, TrendingUp, Zap } from "lucide-react"
+"use client"
+
+import { useState, useEffect } from "react"
+import { Search, TrendingUp, Hash, Users, Flame, Star, Filter } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ViralBadge } from "@/components/viral-badge"
+import { getAllMedia, type MediaItem } from "@/lib/media-service"
+import { Skeleton } from "@/components/ui/skeleton"
 
-export default function ExplorarPage() {
+export default function ExplorePage() {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [activeTab, setActiveTab] = useState("viral")
+  const [media, setMedia] = useState<MediaItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Mock data for trending hashtags and users
+  const trendingHashtags = [
+    { tag: "#ChallzViral", posts: 15420, growth: "+45%" },
+    { tag: "#RetoDelDia", posts: 8930, growth: "+23%" },
+    { tag: "#CreatividadTotal", posts: 6750, growth: "+67%" },
+    { tag: "#ViralChallenge", posts: 5240, growth: "+12%" },
+    { tag: "#TalentShow", posts: 4180, growth: "+89%" },
+    { tag: "#DanceChallenge", posts: 3920, growth: "+34%" },
+  ]
+
+  const featuredUsers = [
+    {
+      id: "1",
+      username: "@creador_viral",
+      name: "Creador Viral",
+      followers: 125000,
+      verified: true,
+      photoURL: "/placeholder.svg?height=60&width=60",
+    },
+    {
+      id: "2",
+      username: "@talent_master",
+      name: "Talent Master",
+      followers: 89000,
+      verified: true,
+      photoURL: "/placeholder.svg?height=60&width=60",
+    },
+    {
+      id: "3",
+      username: "@reto_queen",
+      name: "Reto Queen",
+      followers: 67000,
+      verified: false,
+      photoURL: "/placeholder.svg?height=60&width=60",
+    },
+  ]
+
+  useEffect(() => {
+    async function fetchMedia() {
+      try {
+        setLoading(true)
+        const allMedia = await getAllMedia()
+
+        // Calculate viral score for each media item
+        const mediaWithScores = allMedia.map((item) => ({
+          ...item,
+          viralScore: calculateViralScore(item),
+        }))
+
+        setMedia(mediaWithScores)
+      } catch (error) {
+        console.error("Error fetching media:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMedia()
+  }, [])
+
+  // Viral score calculation algorithm
+  const calculateViralScore = (item: MediaItem) => {
+    const ageInHours = (Date.now() - item.createdAt.toMillis()) / (1000 * 60 * 60)
+    const engagementRate = (item.likes + item.comments * 2 + item.shares * 3) / Math.max(item.views, 1)
+    const timeDecay = Math.exp(-ageInHours / 24) // Decay over 24 hours
+
+    return engagementRate * timeDecay * 1000
+  }
+
+  const getFilteredMedia = () => {
+    let filtered = media
+
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (item) =>
+          item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.hashtags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase())),
+      )
+    }
+
+    switch (activeTab) {
+      case "viral":
+        return filtered
+          .filter((item) => item.viralScore > 50)
+          .sort((a, b) => b.viralScore - a.viralScore)
+          .slice(0, 20)
+      case "trending":
+        return filtered
+          .sort((a, b) => {
+            const aEngagement = a.likes + a.comments + a.shares
+            const bEngagement = b.likes + b.comments + b.shares
+            return bEngagement - aEngagement
+          })
+          .slice(0, 20)
+      case "hashtags":
+        return filtered.filter((item) => item.hashtags && item.hashtags.length > 0)
+      case "users":
+        return filtered.sort((a, b) => b.likes - a.likes).slice(0, 10)
+      default:
+        return filtered
+    }
+  }
+
+  const filteredMedia = getFilteredMedia()
+
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex flex-col bg-black/80 backdrop-blur-md border-b border-zinc-800">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-2">
-            <Link href="/">
-              <Button variant="ghost" size="icon" className="text-zinc-400">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-lg font-semibold">Explorar</h1>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-zinc-800">
+        <div className="p-4">
+          <div className="flex items-center gap-3 mb-4">
+            <h1 className="text-xl font-bold">Explorar</h1>
+            <Button variant="ghost" size="icon" className="text-zinc-400">
+              <Filter className="h-5 w-5" />
+            </Button>
           </div>
-        </div>
-        <div className="px-4 pb-3">
+
+          {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 h-4 w-4" />
             <Input
-              placeholder="Buscar retos, usuarios o hashtags"
-              className="pl-10 bg-zinc-900 border-zinc-700 focus-visible:ring-purple-500"
+              placeholder="Buscar retos, usuarios, hashtags..."
+              className="pl-10 bg-zinc-900 border-zinc-700"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pt-28 pb-20">
-        <Tabs defaultValue="trending" className="w-full">
-          <TabsList className="w-full bg-zinc-900 border-b border-zinc-800 rounded-none h-12">
-            <TabsTrigger
-              value="trending"
-              className="flex-1 data-[state=active]:bg-black data-[state=active]:text-white"
-            >
-              Tendencias
-            </TabsTrigger>
-            <TabsTrigger
-              value="categories"
-              className="flex-1 data-[state=active]:bg-black data-[state=active]:text-white"
-            >
-              Categorías
-            </TabsTrigger>
-            <TabsTrigger value="users" className="flex-1 data-[state=active]:bg-black data-[state=active]:text-white">
-              Usuarios
-            </TabsTrigger>
-          </TabsList>
+      <main className="flex-1 pt-32 pb-20">
+        <div className="px-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full bg-zinc-900 mb-6">
+              <TabsTrigger value="viral" className="flex-1 data-[state=active]:bg-purple-600">
+                <Flame className="h-4 w-4 mr-2" />
+                Viral
+              </TabsTrigger>
+              <TabsTrigger value="trending" className="flex-1 data-[state=active]:bg-purple-600">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Trending
+              </TabsTrigger>
+              <TabsTrigger value="hashtags" className="flex-1 data-[state=active]:bg-purple-600">
+                <Hash className="h-4 w-4 mr-2" />
+                Hashtags
+              </TabsTrigger>
+              <TabsTrigger value="users" className="flex-1 data-[state=active]:bg-purple-600">
+                <Users className="h-4 w-4 mr-2" />
+                Usuarios
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Tendencias Tab */}
-          <TabsContent value="trending" className="p-4 space-y-6">
-            {/* Retos Destacados */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold flex items-center">
-                  <TrendingUp className="h-5 w-5 mr-2 text-purple-500" />
-                  Retos Destacados
+            <TabsContent value="viral" className="space-y-4">
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <Flame className="h-5 w-5 text-red-500" />
+                  Contenido Mega-Viral
                 </h2>
-                <Button variant="link" className="text-purple-400 p-0">
-                  Ver todos
-                </Button>
+                <p className="text-sm text-zinc-400">Los retos más populares del momento</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  {
-                    title: "Baile de los 90s",
-                    participants: 238,
-                    image: "/placeholder.svg?height=200&width=200",
-                  },
-                  {
-                    title: "Imita a tu personaje favorito",
-                    participants: 156,
-                    image: "/placeholder.svg?height=200&width=200",
-                  },
-                  {
-                    title: "Cuenta una historia en 15 segundos",
-                    participants: 102,
-                    image: "/placeholder.svg?height=200&width=200",
-                  },
-                  {
-                    title: "Foto de tu lugar favorito",
-                    participants: 89,
-                    image: "/placeholder.svg?height=200&width=200",
-                  },
-                ].map((reto, index) => (
-                  <Link href={`/reto/${index + 1}`} key={index} className="block">
-                    <div className="rounded-lg overflow-hidden bg-zinc-900 border border-zinc-800">
-                      <div className="aspect-square relative">
-                        <Image src={reto.image || "/placeholder.svg"} alt={reto.title} fill className="object-cover" />
-                      </div>
-                      <div className="p-3">
-                        <h3 className="font-medium text-sm line-clamp-1">{reto.title}</h3>
-                        <p className="text-xs text-zinc-400 mt-1">{reto.participants} participantes</p>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
+              {loading ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {[1, 2, 3, 4, 5, 6].map((item) => (
+                    <Skeleton key={item} className="aspect-[3/4] bg-zinc-800 rounded-lg" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredMedia.map((item) => (
+                    <Link href={`/media/${item.id}`} key={item.id}>
+                      <Card className="bg-zinc-900 border-zinc-800 overflow-hidden hover:bg-zinc-800 transition-colors">
+                        <div className="aspect-[3/4] relative">
+                          <Image
+                            src={item.type === "image" ? item.mediaUrl : item.thumbnailUrl || "/placeholder.svg"}
+                            alt={item.title}
+                            fill
+                            className="object-cover"
+                          />
+                          <div className="absolute top-2 left-2">
+                            <ViralBadge type="viral" />
+                          </div>
+                          <div className="absolute bottom-2 right-2 flex gap-1">
+                            <Badge className="text-xs bg-black/60 backdrop-blur-sm">{item.likes}</Badge>
+                          </div>
+                        </div>
+                        <CardContent className="p-3">
+                          <h3 className="font-medium text-sm line-clamp-2 text-white">{item.title}</h3>
+                          <p className="text-xs text-zinc-400 mt-1">@{item.username}</p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
 
-            {/* Hashtags Populares */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold flex items-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="mr-2 text-purple-500"
-                  >
-                    <line x1="4" y1="9" x2="20" y2="9"></line>
-                    <line x1="4" y1="15" x2="20" y2="15"></line>
-                    <line x1="10" y1="3" x2="8" y2="21"></line>
-                    <line x1="16" y1="3" x2="14" y2="21"></line>
-                  </svg>
+            <TabsContent value="trending" className="space-y-4">
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-purple-500" />
+                  Tendencias Actuales
+                </h2>
+                <p className="text-sm text-zinc-400">Lo que está ganando popularidad ahora</p>
+              </div>
+
+              {loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map((item) => (
+                    <Skeleton key={item} className="h-20 bg-zinc-800 rounded-lg" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredMedia.map((item, index) => (
+                    <Link href={`/media/${item.id}`} key={item.id}>
+                      <Card className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-sm">
+                              {index + 1}
+                            </div>
+                            <div className="w-16 h-16 relative rounded-lg overflow-hidden">
+                              <Image
+                                src={item.type === "image" ? item.mediaUrl : item.thumbnailUrl || "/placeholder.svg"}
+                                alt={item.title}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-medium text-white line-clamp-1">{item.title}</h3>
+                              <p className="text-sm text-zinc-400">@{item.username}</p>
+                              <div className="flex items-center gap-4 mt-1">
+                                <span className="text-xs text-zinc-500">{item.likes} likes</span>
+                                <span className="text-xs text-zinc-500">{item.views} views</span>
+                              </div>
+                            </div>
+                            <ViralBadge type="trending" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="hashtags" className="space-y-4">
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <Hash className="h-5 w-5 text-pink-500" />
                   Hashtags Populares
                 </h2>
+                <p className="text-sm text-zinc-400">Los hashtags más usados en Challz</p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { name: "challz", count: "1.2k" },
-                  { name: "baile90s", count: "856" },
-                  { name: "creatividad", count: "723" },
-                  { name: "retosdiarios", count: "512" },
-                  { name: "musica", count: "498" },
-                  { name: "talento", count: "345" },
-                  { name: "diversión", count: "289" },
-                  { name: "challenge", count: "267" },
-                ].map((hashtag, index) => (
-                  <Badge
-                    key={index}
-                    className="bg-zinc-800 hover:bg-zinc-700 text-white border-none py-1.5 px-3 cursor-pointer"
-                  >
-                    #{hashtag.name} <span className="text-zinc-400 ml-1">{hashtag.count}</span>
-                  </Badge>
+              <div className="space-y-3">
+                {trendingHashtags.map((hashtag, index) => (
+                  <Card key={hashtag.tag} className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-sm">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-white">{hashtag.tag}</h3>
+                            <p className="text-sm text-zinc-400">{hashtag.posts.toLocaleString()} publicaciones</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge className="bg-green-600 text-white mb-1">{hashtag.growth}</Badge>
+                          <p className="text-xs text-zinc-500">crecimiento</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </div>
+            </TabsContent>
 
-            {/* Respuestas Populares */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold flex items-center">
-                  <Zap className="h-5 w-5 mr-2 text-purple-500" />
-                  Respuestas Populares
+            <TabsContent value="users" className="space-y-4">
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-blue-500" />
+                  Creadores Destacados
                 </h2>
-                <Button variant="link" className="text-purple-400 p-0">
-                  Ver todas
-                </Button>
+                <p className="text-sm text-zinc-400">Los usuarios más populares de la semana</p>
               </div>
 
-              <div className="space-y-4">
-                {[1, 2, 3].map((item) => (
-                  <div key={item} className="flex gap-3 p-3 bg-zinc-900 rounded-lg border border-zinc-800">
-                    <div className="h-20 w-20 bg-zinc-800 rounded-md overflow-hidden relative">
-                      <Image
-                        src={`/placeholder.svg?height=80&width=80`}
-                        alt={`Popular response ${item}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src="/placeholder.svg?height=24&width=24" alt="@user" />
-                          <AvatarFallback>U</AvatarFallback>
-                        </Avatar>
-                        <p className="text-sm font-medium">@usuario{item}</p>
-                      </div>
-                      <p className="text-xs text-zinc-400 mt-1">Reto: Título del reto {item}</p>
-                      <div className="flex items-center gap-4 mt-2">
-                        <div className="flex items-center gap-1">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-red-400"
-                          >
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                          </svg>
-                          <span className="text-xs">{Math.floor(Math.random() * 1000)}</span>
+              <div className="space-y-3">
+                {featuredUsers.map((user, index) => (
+                  <Card key={user.id} className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-sm">
+                            {index + 1}
+                          </div>
+                          <Avatar className="h-12 w-12 border-2 border-purple-500">
+                            <AvatarImage src={user.photoURL || "/placeholder.svg"} alt={user.username} />
+                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-medium text-white">{user.name}</h3>
+                              {user.verified && <Star className="h-4 w-4 text-purple-500" />}
+                            </div>
+                            <p className="text-sm text-zinc-400">{user.username}</p>
+                            <p className="text-xs text-zinc-500">{user.followers.toLocaleString()} seguidores</p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-zinc-400"
-                          >
-                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                          </svg>
-                          <span className="text-xs">{Math.floor(Math.random() * 100)}</span>
-                        </div>
+                        <Button
+                          size="sm"
+                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        >
+                          Seguir
+                        </Button>
                       </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </div>
-          </TabsContent>
 
-          {/* Categorías Tab */}
-          <TabsContent value="categories" className="p-4">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { name: "Creatividad", icon: "🎨", color: "from-purple-500 to-pink-500" },
-                { name: "Fitness", icon: "💪", color: "from-green-500 to-emerald-500" },
-                { name: "Música", icon: "🎵", color: "from-blue-500 to-indigo-500" },
-                { name: "Comida", icon: "🍕", color: "from-orange-500 to-amber-500" },
-                { name: "Aprendizaje", icon: "📚", color: "from-cyan-500 to-blue-500" },
-                { name: "Social", icon: "👥", color: "from-pink-500 to-rose-500" },
-                { name: "Viajes", icon: "✈️", color: "from-teal-500 to-green-500" },
-                { name: "Tecnología", icon: "💻", color: "from-violet-500 to-purple-500" },
-              ].map((category, index) => (
-                <div
-                  key={index}
-                  className={`rounded-lg overflow-hidden bg-gradient-to-br ${category.color} p-6 flex flex-col items-center justify-center aspect-square`}
-                >
-                  <span className="text-4xl mb-2">{category.icon}</span>
-                  <h3 className="font-bold text-white">{category.name}</h3>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* Usuarios Tab */}
-          <TabsContent value="users" className="p-4">
-            <div className="space-y-4">
-              {[
-                { name: "María Rodríguez", username: "mariarodriguez", followers: "1.2k" },
-                { name: "Carlos Pérez", username: "carlosperez", followers: "856" },
-                { name: "Ana López", username: "analopez", followers: "723" },
-                { name: "Juan Díaz", username: "juandiaz", followers: "512" },
-                { name: "Laura Martínez", username: "lauramartinez", followers: "498" },
-              ].map((user, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border-2 border-purple-500">
-                      <AvatarImage src={`/placeholder.svg?height=48&width=48`} alt={`@${user.username}`} />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-zinc-400">@{user.username}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
-                      Seguir
-                    </Button>
-                    <p className="text-xs text-zinc-400 mt-1">{user.followers} seguidores</p>
+              {/* User Media Grid */}
+              {filteredMedia.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-4">Contenido Popular de Usuarios</h3>
+                  <div className="grid grid-cols-3 gap-1">
+                    {filteredMedia.slice(0, 9).map((item) => (
+                      <Link href={`/media/${item.id}`} key={item.id}>
+                        <div className="aspect-square relative">
+                          <Image
+                            src={item.type === "image" ? item.mediaUrl : item.thumbnailUrl || "/placeholder.svg"}
+                            alt={item.title}
+                            fill
+                            className="object-cover"
+                          />
+                          <div className="absolute bottom-1 right-1">
+                            <Badge className="text-[10px] py-0 h-4 bg-black/60 backdrop-blur-sm">{item.likes}</Badge>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
       </main>
     </div>
   )
