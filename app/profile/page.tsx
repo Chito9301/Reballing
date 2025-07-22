@@ -94,6 +94,22 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            <div className="flex gap-3 mb-6">
+              <Link href="/profile/edit" className="flex-1">
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                  Editar perfil
+                </Button>
+              </Link>
+              <Link href="/profile/settings" className="flex-1">
+                <Button
+                  variant="outline"
+                  className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800 bg-transparent"
+                >
+                  Configuración
+                </Button>
+              </Link>
+            </div>
+
             <Tabs defaultValue="challenges" className="w-full">
               <TabsList className="w-full bg-zinc-900 border-b border-zinc-800 rounded-none h-12">
                 <TabsTrigger

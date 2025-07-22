@@ -1,6 +1,20 @@
 "use client"
 
-import { Heart, MessageCircle, Plus, Search, Share2, ChevronUp, Music, Bookmark, Eye, TrendingUp } from "lucide-react"
+import type React from "react"
+
+import {
+  Heart,
+  MessageCircle,
+  Plus,
+  Search,
+  Share2,
+  ChevronUp,
+  Music,
+  Eye,
+  TrendingUp,
+  Bookmark,
+  AlertTriangle,
+} from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -11,6 +25,36 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { getTrendingMedia, type MediaItem } from "@/lib/media-service"
 import { useRouter } from "next/navigation"
+
+interface InteractiveButtonProps {
+  icon: React.ElementType
+  count: string | number
+  isActive: boolean
+  onClick: () => void
+  activeColor?: string
+}
+
+function InteractiveButton({
+  icon: Icon,
+  count,
+  isActive,
+  onClick,
+  activeColor = "text-purple-500",
+}: InteractiveButtonProps) {
+  return (
+    <div className="flex flex-col items-center">
+      <Button
+        variant="ghost"
+        size="icon"
+        className={`rounded-full bg-black/40 backdrop-blur-md h-12 w-12 transition-all duration-200 hover:scale-110 ${isActive ? activeColor : "text-white"}`}
+        onClick={onClick}
+      >
+        <Icon className="h-7 w-7" />
+      </Button>
+      <span className="text-xs mt-1">{count}</span>
+    </div>
+  )
+}
 
 export default function Home() {
   const { user, isConfigured } = useAuth()
@@ -217,40 +261,72 @@ export default function Home() {
             </div>
           </button>
 
-          <div className="flex flex-col items-center">
-            <Button variant="ghost" size="icon" className="rounded-full bg-black/40 backdrop-blur-md h-12 w-12">
-              <Heart className="h-7 w-7" />
-            </Button>
-            <span className="text-xs mt-1">{currentMedia?.likes || 0}</span>
-          </div>
+          <InteractiveButton
+            icon={Heart}
+            count={currentMedia?.likes || 0}
+            isActive={false}
+            onClick={() => console.log("Like clicked")}
+            activeColor="text-red-500"
+          />
 
-          <div className="flex flex-col items-center">
-            <Button variant="ghost" size="icon" className="rounded-full bg-black/40 backdrop-blur-md h-12 w-12">
-              <MessageCircle className="h-7 w-7" />
-            </Button>
-            <span className="text-xs mt-1">{currentMedia?.comments || 0}</span>
-          </div>
+          <InteractiveButton
+            icon={MessageCircle}
+            count={currentMedia?.comments || 0}
+            isActive={false}
+            onClick={() => console.log("Comments clicked")}
+          />
 
-          <div className="flex flex-col items-center">
-            <Button variant="ghost" size="icon" className="rounded-full bg-black/40 backdrop-blur-md h-12 w-12">
-              <Eye className="h-7 w-7" />
-            </Button>
-            <span className="text-xs mt-1">{currentMedia?.views || 0}</span>
-          </div>
+          <InteractiveButton
+            icon={Eye}
+            count={currentMedia?.views || 0}
+            isActive={false}
+            onClick={() => console.log("Views clicked")}
+          />
 
-          <div className="flex flex-col items-center">
-            <Button variant="ghost" size="icon" className="rounded-full bg-black/40 backdrop-blur-md h-12 w-12">
-              <Bookmark className="h-7 w-7" />
-            </Button>
-            <span className="text-xs mt-1">Guardar</span>
-          </div>
+          <InteractiveButton
+            icon={Bookmark}
+            count="Guardar"
+            isActive={false}
+            onClick={() => console.log("Save clicked")}
+            activeColor="text-yellow-500"
+          />
 
-          <div className="flex flex-col items-center">
-            <Button variant="ghost" size="icon" className="rounded-full bg-black/40 backdrop-blur-md h-12 w-12">
-              <Share2 className="h-7 w-7" />
-            </Button>
-            <span className="text-xs mt-1">Compartir</span>
-          </div>
+          <InteractiveButton
+            icon={Share2}
+            count="Compartir"
+            isActive={false}
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: "Challz",
+                  text: "Mira este increíble reto en Challz",
+                  url: window.location.href,
+                })
+              } else {
+                console.log("Share clicked")
+              }
+            }}
+          />
+
+          <InteractiveButton
+            icon={TrendingUp}
+            count="Viral"
+            isActive={false}
+            onClick={() => console.log("Viral clicked")}
+            activeColor="text-orange-500"
+          />
+
+          <InteractiveButton
+            icon={AlertTriangle}
+            count="Reportar"
+            isActive={false}
+            onClick={() => {
+              if (confirm("¿Quieres reportar este contenido?")) {
+                alert("Reporte enviado. Gracias por ayudarnos a mantener la comunidad segura.")
+              }
+            }}
+            activeColor="text-red-500"
+          />
         </div>
 
         {/* Bottom Content Info */}
@@ -288,7 +364,7 @@ export default function Home() {
                   {!isConfigured ? "Configurar Firebase" : "Aceptar Reto"}
                 </Button>
                 <Link href="/reto/1">
-                  <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800">
+                  <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 bg-transparent">
                     Ver Respuestas
                   </Button>
                 </Link>
