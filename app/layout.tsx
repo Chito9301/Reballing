@@ -1,7 +1,6 @@
 import type React from "react"
 import "@/app/globals.css"
-import { ThemeProvider as NextThemeProvider } from "@/components/theme-provider"
-import { ThemeProvider } from "@/contexts/theme-context"
+import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 
 export const metadata = {
@@ -17,11 +16,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <ThemeProvider>
-          <NextThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-            <AuthProvider>{children}</AuthProvider>
-          </NextThemeProvider>
+      <body className="min-h-screen bg-black font-sans antialiased">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
       </body>
     </html>
