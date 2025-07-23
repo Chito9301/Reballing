@@ -16,17 +16,16 @@ import {
   Bookmark,
   MessageSquare,
   ChevronUp,
-  Music,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { AppIcon } from "@/components/app-icon"
 
+// Hook simulado, reemplaza con Firebase Auth real cuando puedas
 function useAuth() {
   return {
-    user: null,
+    user: null, // cambia a objeto usuario real o null si no está logueado
     isConfigured: true,
   }
 }
@@ -178,14 +177,16 @@ export default function Home() {
             <Plus className="h-6 w-6" />
           </Button>
 
-          <button onClick={handleProfileClick}>
-            <Button variant="ghost" className="flex flex-col items-center gap-1 text-zinc-400 text-xs">
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                <path d="M20 21V19C20..." stroke="currentColor" strokeWidth="2" />
-              </svg>
-              Perfil
-            </Button>
-          </button>
+          <Button
+            onClick={handleProfileClick}
+            variant="ghost"
+            className="flex flex-col items-center gap-1 text-zinc-400 text-xs"
+          >
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+              <path d="M20 21V19C20..." stroke="currentColor" strokeWidth="2" />
+            </svg>
+            Perfil
+          </Button>
 
           <Link href="/alertas">
             <Button variant="ghost" className="flex flex-col items-center gap-1 text-zinc-400 text-xs">
