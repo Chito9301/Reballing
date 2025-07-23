@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowLeft, Edit, Settings } from "lucide-react"
+import { ArrowLeft, Edit, Settings, AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -12,18 +12,24 @@ import { useAuth } from "@/contexts/auth-context"
 import { getUserMedia, type MediaItem } from "@/lib/media-service"
 import ProtectedRoute from "@/components/protected-route"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useSearchParams } from "next/navigation"
 
 export default function ProfilePage() {
   const { user } = useAuth()
+  const searchParams = useSearchParams()
   const [userMedia, setUserMedia] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Check if viewing another user's profile
+  const profileUserId = searchParams.get("userId")
+  const isOwnProfile = !profileUserId || profileUserId === user?.uid
 
   useEffect(() => {
     async function fetchUserMedia() {
       if (user) {
         try {
           setLoading(true)
-          const media = await getUserMedia(user.uid)
+          const media = await getUserMedia(profileUserId || user.uid)
           setUserMedia(media)
         } catch (error) {
           console.error("Error fetching user media:", error)
@@ -34,7 +40,13 @@ export default function ProfilePage() {
     }
 
     fetchUserMedia()
-  }, [user])
+  }, [user, profileUserId])
+
+  const handleReportUser = () => {
+    if (confirm("¿Quieres reportar este perfil?")) {
+      alert("Reporte de perfil enviado. Gracias por ayudarnos a mantener la comunidad segura.")
+    }
+  }
 
   return (
     <ProtectedRoute>
@@ -47,15 +59,32 @@ export default function ProfilePage() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="text-lg font-semibold">Mi Perfil</h1>
+            <h1 className="text-lg font-semibold">{isOwnProfile ? "Mi Perfil" : "Perfil de Usuario"}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="text-zinc-400">
-              <Edit className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-zinc-400">
-              <Settings className="h-5 w-5" />
-            </Button>
+            {isOwnProfile ? (
+              <>
+                <Link href="/profile/edit">
+                  <Button variant="ghost" size="icon" className="text-zinc-400">
+                    <Edit className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link href="/profile/settings">
+                  <Button variant="ghost" size="icon" className="text-zinc-400">
+                    <Settings className="h-5 w-5" />
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                onClick={handleReportUser}
+              >
+                <AlertTriangle className="h-5 w-5" />
+              </Button>
+            )}
           </div>
         </header>
 
@@ -94,13 +123,45 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            <div className="flex gap-3 mb-6">
+              {isOwnProfile ? (
+                <>
+                  <Link href="/profile/edit" className="flex-1">
+                    <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                      Editar perfil
+                    </Button>
+                  </Link>
+                  <Link href="/profile/settings" className="flex-1">
+                    <Button
+                      variant="outline"
+                      className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800 bg-transparent"
+                    >
+                      Configuración
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Button className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                    Seguir
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 bg-transparent"
+                  >
+                    Mensaje
+                  </Button>
+                </>
+              )}
+            </div>
+
             <Tabs defaultValue="challenges" className="w-full">
               <TabsList className="w-full bg-zinc-900 border-b border-zinc-800 rounded-none h-12">
                 <TabsTrigger
                   value="challenges"
                   className="flex-1 data-[state=active]:bg-black data-[state=active]:text-white"
                 >
-                  Mis Retos
+                  {isOwnProfile ? "Mis Retos" : "Retos"}
                 </TabsTrigger>
                 <TabsTrigger
                   value="created"
@@ -145,35 +206,49 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-zinc-400">Aún no has participado en ningún reto.</p>
-                    <Link href="/">
-                      <Button className="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                        Explorar Retos
-                      </Button>
-                    </Link>
+                    <p className="text-zinc-400">
+                      {isOwnProfile
+                        ? "Aún no has participado en ningún reto."
+                        : "Este usuario aún no ha participado en ningún reto."}
+                    </p>
+                    {isOwnProfile && (
+                      <Link href="/">
+                        <Button className="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                          Explorar Retos
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                 )}
               </TabsContent>
 
               <TabsContent value="created" className="mt-4">
                 <div className="text-center py-8">
-                  <p className="text-zinc-400">Aún no has creado ningún reto.</p>
-                  <Link href="/crear-reto">
-                    <Button className="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                      Crear Reto
-                    </Button>
-                  </Link>
+                  <p className="text-zinc-400">
+                    {isOwnProfile ? "Aún no has creado ningún reto." : "Este usuario aún no ha creado ningún reto."}
+                  </p>
+                  {isOwnProfile && (
+                    <Link href="/crear-reto">
+                      <Button className="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                        Crear Reto
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </TabsContent>
 
               <TabsContent value="saved" className="mt-4">
                 <div className="text-center py-8">
-                  <p className="text-zinc-400">Aún no has guardado ningún reto.</p>
-                  <Link href="/explorar">
-                    <Button className="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                      Explorar
-                    </Button>
-                  </Link>
+                  <p className="text-zinc-400">
+                    {isOwnProfile ? "Aún no has guardado ningún reto." : "Los retos guardados son privados."}
+                  </p>
+                  {isOwnProfile && (
+                    <Link href="/explorar">
+                      <Button className="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                        Explorar
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>

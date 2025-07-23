@@ -12,6 +12,7 @@ import {
   getDocs,
   where,
   Timestamp,
+  limit,
 } from "firebase/firestore"
 import { v4 as uuidv4 } from "uuid"
 
@@ -36,7 +37,7 @@ export interface MediaItem {
   challengeTitle?: string
 }
 
-// Mock data for when Firebase is not configured
+// Mock data for when Firebase is not configured or has permission issues
 const mockMediaData: MediaItem[] = [
   {
     id: "1",
@@ -85,7 +86,54 @@ const mockMediaData: MediaItem[] = [
     comments: 28,
     createdAt: Timestamp.now(),
   },
+  {
+    id: "4",
+    userId: "demo-user-4",
+    username: "@juandiaz",
+    userPhotoURL: "/placeholder.svg?height=40&width=40",
+    title: "Throwback Thursday",
+    description: "Los mejores hits de los 90s nunca pasan de moda 🎵",
+    mediaUrl: "/placeholder.svg?height=800&width=400",
+    type: "audio",
+    hashtags: ["#challz", "#throwback", "#90smusic"],
+    likes: 432,
+    views: 1800,
+    comments: 19,
+    createdAt: Timestamp.now(),
+  },
+  {
+    id: "5",
+    userId: "demo-user-5",
+    username: "@lauramartinez",
+    userPhotoURL: "/placeholder.svg?height=40&width=40",
+    title: "Outfit inspirado en los 90s",
+    description: "Recreando el look icónico de esa época ✨",
+    mediaUrl: "/placeholder.svg?height=800&width=400",
+    type: "image",
+    hashtags: ["#challz", "#90sfashion", "#vintage"],
+    likes: 789,
+    views: 2900,
+    comments: 56,
+    createdAt: Timestamp.now(),
+  },
 ]
+
+// Check if we can access Firestore
+async function canAccessFirestore(): Promise<boolean> {
+  if (!isFirebaseConfigured() || !db) {
+    return false
+  }
+
+  try {
+    // Try to read from a test collection to check permissions
+    const testQuery = query(collection(db, "media"), limit(1))
+    await getDocs(testQuery)
+    return true
+  } catch (error: any) {
+    console.warn("Firestore access check failed:", error.message)
+    return false
+  }
+}
 
 export async function uploadMedia(
   file: File,
@@ -101,8 +149,10 @@ export async function uploadMedia(
     challengeTitle?: string
   },
 ) {
-  if (!isFirebaseConfigured() || !storage || !db) {
-    throw new Error("Firebase no está configurado. Por favor configura las variables de entorno.")
+  const hasAccess = await canAccessFirestore()
+
+  if (!hasAccess || !storage) {
+    throw new Error("Firebase no está configurado correctamente o no tienes permisos de acceso.")
   }
 
   try {
@@ -168,62 +218,83 @@ export async function uploadMedia(
   }
 }
 
-export async function getTrendingMedia(type: "views" | "likes" | "comments", limit = 10) {
-  if (!isFirebaseConfigured() || !db) {
-    // Return mock data when Firebase is not configured
-    return mockMediaData.sort((a, b) => b[type] - a[type]).slice(0, limit)
+export async function getTrendingMedia(type: "views" | "likes" | "comments", limitCount = 10) {
+  const hasAccess = await canAccessFirestore()
+
+  if (!hasAccess) {
+    console.log("Using mock data - Firebase not accessible or configured")
+    // Return mock data when Firebase is not configured or accessible
+    return mockMediaData.sort((a, b) => b[type] - a[type]).slice(0, limitCount)
   }
 
   try {
-    const mediaQuery = query(collection(db, "media"), orderBy(type, "desc"), limit(limit))
-
+    const mediaQuery = query(collection(db, "media"), orderBy(type, "desc"), limit(limitCount))
     const snapshot = await getDocs(mediaQuery)
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as MediaItem)
-  } catch (error) {
-    console.error(`Error getting trending media by ${type}:`, error)
-    // Fallback to mock data
-    return mockMediaData.sort((a, b) => b[type] - a[type]).slice(0, limit)
+    const results = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as MediaItem)
+
+    // If no results from Firebase, return mock data
+    if (results.length === 0) {
+      console.log("No data in Firebase, using mock data")
+      return mockMediaData.sort((a, b) => b[type] - a[type]).slice(0, limitCount)
+    }
+
+    return results
+  } catch (error: any) {
+    console.warn(`Error getting trending media by ${type}:`, error.message)
+    // Fallback to mock data on any error
+    return mockMediaData.sort((a, b) => b[type] - a[type]).slice(0, limitCount)
   }
 }
 
-export async function getRecentMedia(limit = 10) {
-  if (!isFirebaseConfigured() || !db) {
-    // Return mock data when Firebase is not configured
-    return mockMediaData.slice(0, limit)
+export async function getRecentMedia(limitCount = 10) {
+  const hasAccess = await canAccessFirestore()
+
+  if (!hasAccess) {
+    console.log("Using mock data - Firebase not accessible")
+    return mockMediaData.slice(0, limitCount)
   }
 
   try {
-    const mediaQuery = query(collection(db, "media"), orderBy("createdAt", "desc"), limit(limit))
-
+    const mediaQuery = query(collection(db, "media"), orderBy("createdAt", "desc"), limit(limitCount))
     const snapshot = await getDocs(mediaQuery)
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as MediaItem)
-  } catch (error) {
-    console.error("Error getting recent media:", error)
+    const results = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as MediaItem)
+
+    // If no results from Firebase, return mock data
+    if (results.length === 0) {
+      return mockMediaData.slice(0, limitCount)
+    }
+
+    return results
+  } catch (error: any) {
+    console.warn("Error getting recent media:", error.message)
     // Fallback to mock data
-    return mockMediaData.slice(0, limit)
+    return mockMediaData.slice(0, limitCount)
   }
 }
 
 export async function getUserMedia(userId: string) {
-  if (!isFirebaseConfigured() || !db) {
-    // Return empty array when Firebase is not configured
+  const hasAccess = await canAccessFirestore()
+
+  if (!hasAccess) {
+    // Return empty array when Firebase is not accessible
     return []
   }
 
   try {
     const mediaQuery = query(collection(db, "media"), where("userId", "==", userId), orderBy("createdAt", "desc"))
-
     const snapshot = await getDocs(mediaQuery)
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as MediaItem)
-  } catch (error) {
-    console.error("Error getting user media:", error)
+  } catch (error: any) {
+    console.warn("Error getting user media:", error.message)
     return []
   }
 }
 
 export async function incrementMediaStats(mediaId: string, field: "views" | "likes" | "comments") {
-  if (!isFirebaseConfigured() || !db) {
-    console.warn("Firebase not configured, skipping stats increment")
+  const hasAccess = await canAccessFirestore()
+
+  if (!hasAccess) {
+    console.warn("Firebase not accessible, skipping stats increment")
     return
   }
 
@@ -232,7 +303,7 @@ export async function incrementMediaStats(mediaId: string, field: "views" | "lik
     await updateDoc(mediaRef, {
       [field]: increment(1),
     })
-  } catch (error) {
-    console.error(`Error incrementing ${field} for media ${mediaId}:`, error)
+  } catch (error: any) {
+    console.warn(`Error incrementing ${field} for media ${mediaId}:`, error.message)
   }
 }

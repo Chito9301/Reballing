@@ -331,9 +331,11 @@ export default function AlertasPage() {
               <BellOff className="h-5 w-5 text-zinc-400" />
               <span className="text-sm">Configurar notificaciones</span>
             </div>
-            <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300">
-              Configurar
-            </Button>
+            <Link href="/notifications/settings">
+              <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300">
+                Configurar
+              </Button>
+            </Link>
           </div>
         </div>
       </main>
