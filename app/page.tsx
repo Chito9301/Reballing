@@ -122,6 +122,11 @@ export default function Home() {
     }
   }
 
+  // Evitar renderizar contenido dependiente de currentMedia hasta que esté definido
+  if (!loading && trendingMedia.length > 0 && !currentMedia) {
+    return null
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       {/* Header */}
