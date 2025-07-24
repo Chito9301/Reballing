@@ -1,5 +1,4 @@
-import { storage, db, isFirebaseConfigured } from "./firebase"
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
+import { db, isFirebaseConfigured } from "./firebase"
 import {
   collection,
   addDoc,
@@ -135,6 +134,10 @@ async function canAccessFirestore(): Promise<boolean> {
   }
 }
 
+// Cloudinary config (deberás poner tu cloud_name y upload_preset en .env.local)
+const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`
+const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+
 export async function uploadMedia(
   file: File,
   userId: string,
@@ -149,72 +152,65 @@ export async function uploadMedia(
     challengeTitle?: string
   },
 ) {
-  const hasAccess = await canAccessFirestore()
-
-  if (!hasAccess || !storage) {
-    throw new Error("Firebase no está configurado correctamente o no tienes permisos de acceso.")
+  // Subida directa a Cloudinary
+  if (!CLOUDINARY_UPLOAD_URL || !CLOUDINARY_UPLOAD_PRESET) {
+    throw new Error("Cloudinary no está configurado correctamente.")
   }
 
+  const formData = new FormData()
+  formData.append("file", file)
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET)
+  formData.append("folder", `${userId}/${metadata.type}`)
+
+  // Puedes agregar más metadatos si lo deseas
+
+  let uploadResponse
   try {
-    // Create a unique filename
-    const fileExtension = file.name.split(".").pop()
-    const fileName = `${userId}/${metadata.type}/${uuidv4()}.${fileExtension}`
-    const storageRef = ref(storage, fileName)
-
-    // Upload the file
-    const uploadTask = uploadBytesResumable(storageRef, file)
-
-    // Return a promise that resolves when the upload is complete
-    return new Promise<MediaItem>((resolve, reject) => {
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          // You can track progress here if needed
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          console.log("Upload is " + progress + "% done")
-        },
-        (error) => {
-          // Handle unsuccessful uploads
-          console.error("Upload failed:", error)
-          reject(error)
-        },
-        async () => {
-          // Handle successful uploads
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
-
-          // Create a document in Firestore
-          const mediaData: Omit<MediaItem, "id"> = {
-            userId,
-            username,
-            userPhotoURL: userPhotoURL || undefined,
-            title: metadata.title,
-            description: metadata.description,
-            mediaUrl: downloadURL,
-            type: metadata.type,
-            hashtags: metadata.hashtags,
-            likes: 0,
-            views: 0,
-            comments: 0,
-            createdAt: Timestamp.now(),
-            ...(metadata.challengeId && { challengeId: metadata.challengeId }),
-            ...(metadata.challengeTitle && { challengeTitle: metadata.challengeTitle }),
-          }
-
-          const docRef = await addDoc(collection(db, "media"), mediaData)
-
-          // Update the user's media array
-          const userRef = doc(db, "users", userId)
-          await updateDoc(userRef, {
-            media: arrayUnion(docRef.id),
-          })
-
-          resolve({ id: docRef.id, ...mediaData })
-        },
-      )
+    uploadResponse = await fetch(CLOUDINARY_UPLOAD_URL, {
+      method: "POST",
+      body: formData,
     })
+  } catch (err) {
+    throw new Error("Error subiendo archivo a Cloudinary: " + err)
+  }
+
+  if (!uploadResponse.ok) {
+    const errorText = await uploadResponse.text();
+    throw new Error("Error en la respuesta de Cloudinary: " + errorText);
+  }
+
+  const uploadResult = await uploadResponse.json()
+  const downloadURL = uploadResult.secure_url
+  const thumbnailUrl = uploadResult.thumbnail_url || uploadResult.secure_url
+
+  // Registro en Firestore (igual que antes)
+  try {
+    const mediaData: Omit<MediaItem, "id"> = {
+      userId,
+      username,
+      userPhotoURL: userPhotoURL || undefined,
+      title: metadata.title,
+      description: metadata.description,
+      mediaUrl: downloadURL,
+      thumbnailUrl,
+      type: metadata.type,
+      hashtags: metadata.hashtags,
+      likes: 0,
+      views: 0,
+      comments: 0,
+      createdAt: Timestamp.now(),
+      ...(metadata.challengeId && { challengeId: metadata.challengeId }),
+      ...(metadata.challengeTitle && { challengeTitle: metadata.challengeTitle }),
+    }
+
+    const docRef = await addDoc(collection(db, "media"), mediaData)
+    const userRef = doc(db, "users", userId)
+    await updateDoc(userRef, {
+      media: arrayUnion(docRef.id),
+    })
+    return { id: docRef.id, ...mediaData }
   } catch (error) {
-    console.error("Error in uploadMedia:", error)
-    throw error
+    throw new Error("Error registrando media en Firestore: " + error)
   }
 }
 
